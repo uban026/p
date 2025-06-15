@@ -45,13 +45,15 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
+            // [+] Tambahkan 'sizes' pada validasi
             $validated = $request->validate([
                 'category_id' => 'required|exists:categories,id',
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
-                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+                'sizes' => 'nullable|string', // [+] Validasi untuk sizes
             ]);
 
             $image = null;
@@ -63,6 +65,9 @@ class ProductController extends Controller
                 $image = "data:image/{$extension};base64,{$base64}";
             }
 
+            // [+] Proses input string sizes (e.g., "S, M, L") menjadi array
+            $sizes = !empty($validated['sizes']) ? array_map('trim', explode(',', $validated['sizes'])) : null;
+
             Product::create([
                 'category_id' => $validated['category_id'],
                 'name' => $validated['name'],
@@ -71,6 +76,7 @@ class ProductController extends Controller
                 'price' => $this->cleanPrice($validated['price']),
                 'stock' => $validated['stock'],
                 'image' => $image,
+                'sizes' => $sizes, // [+] Simpan data sizes yang sudah menjadi array
                 'is_active' => $request->has('is_active'),
             ]);
 
@@ -89,14 +95,19 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
+            // [+] Tambahkan 'sizes' pada validasi
             $validated = $request->validate([
                 'category_id' => 'required|exists:categories,id',
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sizes' => 'nullable|string', // [+] Validasi untuk sizes
             ]);
+
+            // [+] Proses input string sizes (e.g., "S, M, L") menjadi array
+            $sizes = !empty($validated['sizes']) ? array_map('trim', explode(',', $validated['sizes'])) : null;
 
             $data = [
                 'category_id' => $validated['category_id'],
@@ -105,6 +116,7 @@ class ProductController extends Controller
                 'description' => $validated['description'],
                 'price' => $this->cleanPrice($validated['price']),
                 'stock' => $validated['stock'],
+                'sizes' => $sizes, // [+] Tambahkan data sizes untuk diupdate
                 'is_active' => $request->has('is_active'),
             ];
 

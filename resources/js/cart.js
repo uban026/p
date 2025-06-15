@@ -13,6 +13,37 @@ class ShoppingCart {
         this.attachEventListeners();
     }
 
+    addItem(product, size = null) { // [+] Terima parameter size
+        if (!product?.id) return;
+
+        try {
+            // [+] ID unik di keranjang adalah kombinasi ID produk dan ukuran
+            const cartId = size ? `<span class="math-inline">\{product\.id\}\-</span>{size}` : product.id;
+            const existingItem = this.items.find(item => item.cartId === cartId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                this.items.push({
+                    cartId: cartId, // [+] Simpan ID unik
+                    id: parseInt(product.id),
+                    name: product.name,
+                    price: parseFloat(product.price),
+                    image: product.image,
+                    category: product.category_name,
+                    quantity: 1,
+                    size: size // [+] Simpan ukuran
+                });
+            }
+
+            this.saveCartToStorage();
+            this.updateCartUI();
+            // ... notifikasi
+        } catch (error) {
+            // ...
+        }
+    }
+
     getCartFromStorage() {
         try {
             return JSON.parse(localStorage.getItem('shopping_cart')) || [];
@@ -139,6 +170,16 @@ class ShoppingCart {
     createCartItemElement(item) {
         const div = document.createElement('div');
         div.className = 'p-6 border-b border-gray-200';
+        const sizeInfo = item.size ? `<p class="mt-1 text-sm text-gray-500">Ukuran: ${item.size}</p>` : '';
+        div.innerHTML = `
+            <div class="flex items-center">
+                <img src="<span class="math-inline">\{item\.image\}" alt\="</span>{item.name}" class="w-20 h-20 object-cover rounded-lg">
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium text-gray-900">${item.name}</h3>
+                    ${sizeInfo} 
+                    // ... sisa HTML
+                </div>
+            </div>`;
         div.innerHTML = `
             <div class="flex items-center">
                 <img src="${item.image}" alt="${item.name}"

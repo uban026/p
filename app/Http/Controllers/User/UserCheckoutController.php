@@ -73,7 +73,8 @@ class UserCheckoutController extends Controller
                     'order_id' => $order->id,
                     'product_id' => $item['id'],
                     'quantity' => $item['quantity'],
-                    'price' => $item['price']
+                    'price' => $item['price'],
+                    'size' => $item['size'] ?? null,
                 ]);
 
                 $totalAmount += ($item['price'] * $item['quantity']);
@@ -159,7 +160,6 @@ class UserCheckoutController extends Controller
                 'snap_token' => $snapToken,
                 'order_id' => $order->id
             ]);
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Checkout process error: ' . $e->getMessage(), [
@@ -201,7 +201,6 @@ class UserCheckoutController extends Controller
                 'status' => 'success',
                 'message' => 'Order status updated successfully'
             ]);
-
         } catch (Exception $e) {
             Log::error('Error updating order status: ' . $e->getMessage());
 

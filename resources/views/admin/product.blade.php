@@ -148,11 +148,11 @@
                             <div class="mb-3">
                                 <label class="form-label">Category *</label>
                                 <select class="form-select @error('category_id') is-invalid @enderror" name="category_id"
-                                    required>
+                                    required onchange="toggleSizesField(this)">
                                     <option value="">Select Category</option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}"
-                                            {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        <option value="{{ $category->id }}" data-category-name="{{ $category->name }}"
+                                            {{-- ... (kondisi selected) --}}>
                                             {{ $category->name }}
                                         </option>
                                     @endforeach
@@ -202,6 +202,13 @@
                                 @error('stock')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                            <div class="mb-3 size-field" style="display: none;">
+                                <label class="form-label">Sizes</label>
+                                <input type="text" class="form-control" name="sizes" value="{{ old('sizes') }}"
+                                    placeholder="Contoh: S, M, L, XL">
+                                <small class="text-muted">Pisahkan ukuran dengan koma. Kosongkan jika bukan produk
+                                    pakaian.</small>
                             </div>
 
                             <!-- Image -->
@@ -257,11 +264,11 @@
                                 <div class="mb-3">
                                     <label class="form-label">Category *</label>
                                     <select class="form-select @error('category_id') is-invalid @enderror"
-                                        name="category_id" required>
+                                        name="category_id" required onchange="toggleSizesField(this)">
                                         <option value="">Select Category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}"
-                                                {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                                data-category-name="{{ $category->name }}" {{-- ... (kondisi selected) --}}>
                                                 {{ $category->name }}
                                             </option>
                                         @endforeach
@@ -311,6 +318,16 @@
                                     @error('stock')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                <div class="mb-3 size-field"
+                                    style="display: {{ $product->category->name === 'Pakaian' ? 'block' : 'none' }};">
+                                    <label class="form-label">Sizes</label>
+                                    <input type="text" class="form-control" name="sizes"
+                                        value="{{ old('sizes', is_array($product->sizes) ? implode(', ', $product->sizes) : '') }}"
+                                        placeholder="Contoh: S, M, L, XL">
+                                    <small class="text-muted">Pisahkan ukuran dengan koma. Kosongkan jika bukan produk
+                                        pakaian.</small>
                                 </div>
 
                                 <!-- Image -->
@@ -506,6 +523,32 @@
                 if (e.key === 'Enter') {
                     e.preventDefault();
                 }
+            });
+        });
+    </script>
+    <script>
+        function toggleSizesField(selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const categoryName = selectedOption.getAttribute('data-category-name');
+            const form = selectElement.closest('form');
+            const sizeField = form.querySelector('.size-field');
+
+            if (categoryName && categoryName.toLowerCase() === 'pakaian') {
+                sizeField.style.display = 'block';
+            } else {
+                sizeField.style.display = 'none';
+            }
+        }
+
+        // Panggil saat modal edit dibuka untuk memastikan state awal benar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function() {
+                    const select = modal.querySelector('select[name="category_id"]');
+                    if (select) {
+                        toggleSizesField(select);
+                    }
+                });
             });
         });
     </script>

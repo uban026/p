@@ -13,47 +13,22 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        // Hapus data lama untuk memastikan data baru saja yang ada
+        Category::query()->delete();
+
         $categories = [
             [
-                'name' => 'Smartphones',
-                'description' => 'Latest smartphones from various brands including iPhone, Samsung, and more',
+                'name' => 'Pakaian',
+                'description' => 'Berbagai jenis pakaian seperti kaos, kemeja, dan hoodie.',
             ],
             [
-                'name' => 'Laptops',
-                'description' => 'Professional and gaming laptops from top manufacturers',
+                'name' => 'Lanyard',
+                'description' => 'Lanyard custom untuk berbagai keperluan acara atau identitas.',
             ],
             [
-                'name' => 'Computer Parts',
-                'description' => 'PC components including CPU, GPU, RAM, and storage devices',
+                'name' => 'Totebag',
+                'description' => 'Tas jinjing ramah lingkungan dengan berbagai desain.',
             ],
-            [
-                'name' => 'Audio Equipment',
-                'description' => 'High-quality headphones, earbuds, speakers, and audio accessories',
-            ],
-            [
-                'name' => 'Gaming Gear',
-                'description' => 'Gaming consoles, controllers, and gaming accessories',
-            ],
-            [
-                'name' => 'Cameras',
-                'description' => 'Digital cameras, lenses, and photography accessories',
-            ],
-            [
-                'name' => 'Smart Home',
-                'description' => 'Smart home devices, automation systems, and IoT gadgets',
-            ],
-            [
-                'name' => 'Wearables',
-                'description' => 'Smartwatches, fitness trackers, and wearable technology',
-            ],
-            [
-                'name' => 'Networking',
-                'description' => 'Routers, switches, network cards, and connectivity solutions',
-            ],
-            [
-                'name' => 'Accessories',
-                'description' => 'Various accessories for electronic devices and gadgets',
-            ]
         ];
 
         foreach ($categories as $category) {

@@ -6,6 +6,7 @@ use App\HasSlug;
 use App\ProductInventory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str; // [+] TAMBAHKAN BARIS INI
 
 class Product extends Model
 {
@@ -18,6 +19,7 @@ class Product extends Model
         'description',
         'price',
         'stock',
+        'sizes',
         'image',
         'is_active',
     ];
@@ -25,7 +27,8 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
-        'stock' => 'integer'
+        'stock' => 'integer',
+        'sizes' => 'array',
     ];
 
     /**
@@ -46,32 +49,44 @@ class Product extends Model
 
     /**
      * Get primary image from image array.
-     * 
-     * @return string|null
+     * * @return string|null
      */
     public function getPrimaryImage()
     {
-        if (!$this->image) {
-            return null;
+        $imagePath = null;
+        if (!empty($this->image)) {
+            $imagePath = is_array($this->image) ? $this->image[0] : $this->image;
         }
 
-        return is_array($this->image) ? $this->image[0] : $this->image;
+        // Jika path adalah path file lokal, gunakan asset(). Jika base64, kembalikan langsung.
+        if ($imagePath && !Str::startsWith($imagePath, 'data:image')) {
+            return asset($imagePath);
+        }
+
+        // Return base64 string atau null jika tidak ada gambar
+        return $imagePath;
     }
 
     /**
      * Get all images for the product.
-     * 
-     * @return array
+     * * @return array
      */
     public function getAllImages()
     {
-        return is_array($this->image) ? $this->image : [$this->image];
+        $allImages = is_array($this->image) ? $this->image : [$this->image];
+
+        return array_map(function ($imagePath) {
+            if ($imagePath && !Str::startsWith($imagePath, 'data:image')) {
+                return asset($imagePath);
+            }
+            return $imagePath;
+        }, $allImages);
     }
+
 
     /**
      * Get the route key for the model.
-     * 
-     * @return string
+     * * @return string
      */
     public function getRouteKeyName()
     {
@@ -104,8 +119,7 @@ class Product extends Model
 
     /**
      * Format price to rupiah
-     * 
-     * @return string
+     * * @return string
      */
     public function getFormattedPriceAttribute()
     {
@@ -114,8 +128,7 @@ class Product extends Model
 
     /**
      * Check if product has specific image
-     * 
-     * @param string $imagePath
+     * * @param string $imagePath
      * @return bool
      */
     public function hasImage(string $imagePath): bool
@@ -125,8 +138,7 @@ class Product extends Model
 
     /**
      * Add new image to product
-     * 
-     * @param string $imagePath
+     * * @param string $imagePath
      * @return void
      */
     public function addImage(string $imagePath): void
@@ -139,8 +151,7 @@ class Product extends Model
 
     /**
      * Remove image from product
-     * 
-     * @param string $imagePath
+     * * @param string $imagePath
      * @return void
      */
     public function removeImage(string $imagePath): void
@@ -152,8 +163,7 @@ class Product extends Model
 
     /**
      * Set primary image for product
-     * 
-     * @param string $imagePath
+     * * @param string $imagePath
      * @return void
      */
     public function setPrimaryImage(string $imagePath): void

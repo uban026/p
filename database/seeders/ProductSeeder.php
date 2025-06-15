@@ -2,332 +2,159 @@
 
 namespace Database\Seeders;
 
-use Exception;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
 
 class ProductSeeder extends Seeder
 {
-    private function downloadAndConvertToBase64($imageUrl)
-    {
-        try {
-            $response = Http::timeout(30)->get($imageUrl);
-            if ($response->successful()) {
-                $imageData = $response->body();
-                $base64 = base64_encode($imageData);
-                return "data:image/jpeg;base64," . $base64;
-            }
-        } catch (Exception $e) {
-            \Log::error("Error downloading image: " . $e->getMessage());
-        }
-        return null;
-    }
-
-    private function getBase64Images(): array
-    {
-        $imageUrls = [
-            // Smartphones
-            'https://dummyimage.com/600x600/000/fff.jpg&text=iPhone+15',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Samsung+S24',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Pixel+8',
-
-            // Laptops
-            'https://dummyimage.com/600x600/000/fff.jpg&text=MacBook',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=ROG',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Legion',
-
-            // Computer Parts
-            'https://dummyimage.com/600x600/000/fff.jpg&text=RTX4080',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Intel',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=SSD',
-
-            // Audio
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Sony+WH1000XM5',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=JBL',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Bose',
-
-            // Gaming
-            'https://dummyimage.com/600x600/000/fff.jpg&text=PS5',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Switch',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Xbox',
-
-            // Cameras
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Sony+Camera',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Canon',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Fujifilm',
-
-            // Smart Home
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Nest+Hub',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Echo',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Philips+Hue',
-
-            // Wearables
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Apple+Watch',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Galaxy+Watch',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Garmin',
-
-            // Networking
-            'https://dummyimage.com/600x600/000/fff.jpg&text=ASUS+Router',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=TP+Link',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Netgear',
-
-            // Accessories
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Logitech',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Keychron',
-            'https://dummyimage.com/600x600/000/fff.jpg&text=Samsung+SSD'
-        ];
-
-        $base64Images = [];
-        foreach ($imageUrls as $url) {
-            $base64 = $this->downloadAndConvertToBase64($url);
-            if ($base64) {
-                $base64Images[] = $base64;
-            }
-        }
-
-        return $base64Images;
-    }
-
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // Product Data
-        $allProducts = [
-            'Smartphones' => [
-                [
-                    'name' => 'iPhone 15 Pro Max',
-                    'price' => '21999000.00',
-                    'stock' => 50,
-                    'description' => 'Latest iPhone with advanced features and A17 Pro chip',
-                ],
-                [
-                    'name' => 'Samsung Galaxy S24 Ultra',
-                    'price' => '19999000.00',
-                    'stock' => 45,
-                    'description' => 'Premium Android smartphone with S-Pen',
-                ],
-                [
-                    'name' => 'Google Pixel 8 Pro',
-                    'price' => '15999000.00',
-                    'stock' => 30,
-                    'description' => 'Pure Android Experience with advanced AI features',
-                ],
+        // Hapus data produk lama untuk memastikan data yang di-seed adalah data baru
+        Product::query()->delete();
+
+        // Ambil ID kategori yang relevan. Pastikan CategorySeeder sudah dijalankan.
+        $pakaianCategory = Category::where('name', 'Pakaian')->first();
+        $lanyardCategory = Category::where('name', 'Lanyard')->first();
+        $totebagCategory = Category::where('name', 'Totebag')->first();
+
+        // Jika kategori tidak ditemukan, hentikan seeder untuk menghindari error.
+        if (!$pakaianCategory || !$lanyardCategory) {
+            $this->command->error('Pastikan kategori Pakaian dan Lanyard sudah ada sebelum menjalankan ProductSeeder.');
+            return;
+        }
+
+        $products = [
+            // =============== Kategori Pakaian ===============
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Anime',
+                'description' => 'Kaos eksklusif dengan desain karakter anime populer. Bahan adem dan nyaman.',
+                'price' => '125000.00',
+                'stock' => 80,
+                'sizes' => ['S', 'M', 'L', 'XL'],
+                'image' => 'assets/img/kaos_anime.jpg',
             ],
-            'Laptops' => [
-                [
-                    'name' => 'MacBook Pro 16"',
-                    'price' => '24999000.00',
-                    'stock' => 30,
-                    'description' => 'Powerful laptop with M3 chip',
-                ],
-                [
-                    'name' => 'ROG Gaming Laptop',
-                    'price' => '18999000.00',
-                    'stock' => 25,
-                    'description' => 'High-performance gaming laptop with RTX 4090',
-                ],
-                [
-                    'name' => 'Lenovo Legion',
-                    'price' => '16999000.00',
-                    'stock' => 35,
-                    'description' => 'Best value gaming laptop',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Yoasobi',
+                'description' => 'Tunjukkan dukunganmu untuk Yoasobi dengan kaos berkualitas ini.',
+                'price' => '130000.00',
+                'stock' => 65,
+                'sizes' => ['M', 'L', 'XL'],
+                'image' => 'assets/img/portofolio/kaos_yoasobi.jpg',
             ],
-            'Computer Parts' => [
-                [
-                    'name' => 'RTX 4080 Ti',
-                    'price' => '15999000.00',
-                    'stock' => 20,
-                    'description' => 'High-end graphics card for gaming',
-                ],
-                [
-                    'name' => 'Intel i9-14900K',
-                    'price' => '8999000.00',
-                    'stock' => 25,
-                    'description' => 'Latest Intel processor',
-                ],
-                [
-                    'name' => 'Samsung 990 Pro 2TB',
-                    'price' => '2999000.00',
-                    'stock' => 40,
-                    'description' => 'Fast NVMe SSD storage',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Squid Game',
+                'description' => 'Kaos ikonik dari serial drama populer Squid Game.',
+                'price' => '110000.00',
+                'stock' => 90,
+                'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
+                'image' => 'assets/img/portofolio/kaos_squid_game.jpg',
             ],
-            'Audio Equipment' => [
-                [
-                    'name' => 'Sony WH-1000XM5',
-                    'price' => '4999000.00',
-                    'stock' => 40,
-                    'description' => 'Premium noise cancelling headphones',
-                ],
-                [
-                    'name' => 'JBL Flip 6',
-                    'price' => '1999000.00',
-                    'stock' => 55,
-                    'description' => 'Portable waterproof speaker',
-                ],
-                [
-                    'name' => 'Bose QC45',
-                    'price' => '5999000.00',
-                    'stock' => 35,
-                    'description' => 'Premium comfort headphones',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Reg Aespa Armageddon',
+                'description' => 'Kaos edisi spesial untuk comeback Aespa "Armageddon".',
+                'price' => '150000.00',
+                'stock' => 50,
+                'sizes' => ['S', 'M', 'L'],
+                'image' => 'assets/img/portofolio/Kaos_reg_aespa_armageddon.jpg',
             ],
-            'Gaming Gear' => [
-                [
-                    'name' => 'PS5 Digital Edition',
-                    'price' => '8999000.00',
-                    'stock' => 25,
-                    'description' => 'Next-gen gaming console',
-                ],
-                [
-                    'name' => 'Nintendo Switch OLED',
-                    'price' => '4999000.00',
-                    'stock' => 40,
-                    'description' => 'Portable gaming console with OLED screen',
-                ],
-                [
-                    'name' => 'Xbox Series X',
-                    'price' => '8499000.00',
-                    'stock' => 30,
-                    'description' => 'Most powerful gaming console',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Jennie',
+                'description' => 'Kaos stylish yang terinspirasi dari fashion Jennie BLACKPINK.',
+                'price' => '145000.00',
+                'stock' => 70,
+                'sizes' => ['S', 'M', 'L'],
+                'image' => 'assets/img/portofolio/kaos_jennie.jpg',
             ],
-            'Cameras' => [
-                [
-                    'name' => 'Sony A7 IV',
-                    'price' => '29999000.00',
-                    'stock' => 15,
-                    'description' => 'Full-frame mirrorless camera',
-                ],
-                [
-                    'name' => 'Canon EOS R6 Mark II',
-                    'price' => '27999000.00',
-                    'stock' => 20,
-                    'description' => 'Professional mirrorless camera',
-                ],
-                [
-                    'name' => 'Fujifilm X-T5',
-                    'price' => '24999000.00',
-                    'stock' => 25,
-                    'description' => 'Premium APS-C camera',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Baby Monster',
+                'description' => 'Kaos debut dari girl group baru, Baby Monster.',
+                'price' => '140000.00',
+                'stock' => 75,
+                'sizes' => ['S', 'M', 'L', 'XL'],
+                'image' => 'assets/img/portofolio/kaos_baby_monster.jpg',
             ],
-            'Smart Home' => [
-                [
-                    'name' => 'Google Nest Hub',
-                    'price' => '1499000.00',
-                    'stock' => 40,
-                    'description' => 'Smart display with Google Assistant',
-                ],
-                [
-                    'name' => 'Amazon Echo Show',
-                    'price' => '1299000.00',
-                    'stock' => 35,
-                    'description' => 'Smart display with Alexa',
-                ],
-                [
-                    'name' => 'Philips Hue Starter Kit',
-                    'price' => '999000.00',
-                    'stock' => 45,
-                    'description' => 'Smart lighting system',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Crop Top Black Pink',
+                'description' => 'Crop top trendy dengan logo Black Pink, cocok untuk konser atau hangout.',
+                'price' => '160000.00',
+                'stock' => 60,
+                'sizes' => ['S', 'M', 'L'],
+                'image' => 'assets/img/portofolio/crop_top_black_pink.jpg',
             ],
-            'Wearables' => [
-                [
-                    'name' => 'Apple Watch Series 9',
-                    'price' => '6999000.00',
-                    'stock' => 40,
-                    'description' => 'Latest Apple smartwatch with health features',
-                ],
-                [
-                    'name' => 'Samsung Galaxy Watch 6',
-                    'price' => '4999000.00',
-                    'stock' => 35,
-                    'description' => 'Premium Android smartwatch',
-                ],
-                [
-                    'name' => 'Garmin Fenix 7',
-                    'price' => '9999000.00',
-                    'stock' => 20,
-                    'description' => 'Professional sports watch',
-                ],
+            [
+                'category_id' => $pakaianCategory->id,
+                'name' => 'Kaos Kaki KDrama 1988',
+                'description' => 'Kaos kaki lucu dengan tema drama Korea Reply 1988.',
+                'price' => '55000.00',
+                'stock' => 100,
+                'sizes' => ['All Size'],
+                'image' => 'assets/img/portofolio/kaos_kaki_kdrama_1988.jpg',
             ],
-            'Networking' => [
-                [
-                    'name' => 'ASUS ROG Rapture',
-                    'price' => '3999000.00',
-                    'stock' => 25,
-                    'description' => 'High-end WiFi 6 gaming router',
-                ],
-                [
-                    'name' => 'TP-Link Deco X90',
-                    'price' => '4999000.00',
-                    'stock' => 30,
-                    'description' => 'Mesh WiFi system for large homes',
-                ],
-                [
-                    'name' => 'Netgear Nighthawk',
-                    'price' => '3499000.00',
-                    'stock' => 35,
-                    'description' => 'Professional gaming router',
-                ],
+
+            // =============== Kategori Lanyard ===============
+            [
+                'category_id' => $lanyardCategory->id,
+                'name' => 'Lanyard NCT',
+                'description' => 'Lanyard keren dengan logo NCT, wajib punya untuk NCTzen.',
+                'price' => '45000.00',
+                'stock' => 150,
+                'sizes' => null,
+                'image' => 'assets/img/portofolio/lanyard_nct.jpg',
             ],
-            'Accessories' => [
-                [
-                    'name' => 'Logitech MX Master 3S',
-                    'price' => '1499000.00',
-                    'stock' => 50,
-                    'description' => 'Premium wireless mouse for productivity',
-                ],
-                [
-                    'name' => 'Keychron Q1',
-                    'price' => '2499000.00',
-                    'stock' => 30,
-                    'description' => 'Mechanical keyboard with custom switches',
-                ],
-                [
-                    'name' => 'Samsung T7 Shield 2TB',
-                    'price' => '1999000.00',
-                    'stock' => 45,
-                    'description' => 'Rugged portable SSD',
-                ],
+            [
+                'category_id' => $lanyardCategory->id,
+                'name' => 'Lanyard NCT Dream',
+                'description' => 'Lanyard eksklusif NCT Dream untuk menemani aktivitasmu.',
+                'price' => '45000.00',
+                'stock' => 130,
+                'sizes' => null,
+                'image' => 'assets/img/portofolio/lanyard_nct_dream.jpg',
+            ],
+            [
+                'category_id' => $lanyardCategory->id,
+                'name' => 'Lanyard Enhypen',
+                'description' => 'Tunjukkan dukungan untuk Enhypen dengan lanyard resmi ini.',
+                'price' => '40000.00',
+                'stock' => 120,
+                'sizes' => null,
+                'image' => 'assets/img/portofolio/Lanyard_ENHYPEN.jpg',
+            ],
+            [
+                'category_id' => $lanyardCategory->id,
+                'name' => 'Lanyard BTS',
+                'description' => 'Lanyard premium untuk para ARMY, bahan berkualitas dan cetakan tajam.',
+                'price' => '50000.00',
+                'stock' => 200,
+                'sizes' => null,
+                'image' => 'assets/img/portofolio/lanyard_bts.jpg',
             ],
         ];
 
-        // Get images
-        $images = $this->getBase64Images();
-        $imageIndex = 0;
-
-        // Create products
-        foreach ($allProducts as $categoryName => $products) {
-            $category = Category::where('name', $categoryName)->first();
-
-            if (!$category)
-                continue;
-
-            foreach ($products as $productData) {
-                try {
-                    Product::create([
-                        'category_id' => $category->id,
-                        'name' => $productData['name'],
-                        'slug' => Str::slug($productData['name']),
-                        'price' => $productData['price'],
-                        'stock' => $productData['stock'],
-                        'description' => $productData['description'],
-                        'is_active' => true,
-                        'image' => $images[$imageIndex] ?? $images[0]
-                    ]);
-
-                    $imageIndex++;
-                    $this->command->info("Created product: {$productData['name']}");
-
-                } catch (Exception $e) {
-                    $this->command->error("Error creating product {$productData['name']}: " . $e->getMessage());
-                }
-            }
+        // Buat produk di database
+        foreach ($products as $productData) {
+            Product::create([
+                'category_id' => $productData['category_id'],
+                'name' => $productData['name'],
+                'slug' => Str::slug($productData['name']),
+                'description' => $productData['description'],
+                'price' => $productData['price'],
+                'stock' => $productData['stock'],
+                'sizes' => $productData['sizes'],
+                'image' => $productData['image'], // Menggunakan path gambar dari aset
+                'is_active' => true,
+            ]);
         }
     }
 }
