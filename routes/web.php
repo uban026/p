@@ -55,8 +55,11 @@ Route::post('/payments/midtrans-callback', [UserCheckoutController::class, 'call
 */
 Route::middleware(['auth'])->group(function () {
     // Regular User Routes
-
     Route::get('/orders', [UserOrderController::class, 'index'])->name('user.orders');
+    Route::patch('/orders/{order}/cancel', [UserOrderController::class, 'cancel'])->name('user.orders.cancel');
+
+    // Route baru untuk handle sukses pembayaran
+    Route::patch('/orders/{order}/payment-success', [UserOrderController::class, 'paymentSuccess'])->name('user.orders.payment-success');
 
     // Checkout Routes
     Route::post('/checkout/process', [UserCheckoutController::class, 'process'])
@@ -71,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    // ... (sisa kode admin routes tidak berubah)
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('admin.dashboard');
